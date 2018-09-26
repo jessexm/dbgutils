@@ -1,0 +1,33 @@
+INSTALL - ez8mon
+2003/01/29
+--------------------------------
+
+This file contains information for compiling and installing ez8mon
+and the associated flashutil.
+
+There really is no installation for ez8mon. The source code simply
+produces an executable. You can install it wherever you wish.
+
+
+Compiling ez8mon
+--------------------------------
+The Z8 Encore! command line debugger (ez8mon) was origionally written
+and compiled under solaris using the gnu gcc compiler. It has also
+been compiled under linux using the gnu gcc compiler.
+
+The Z8 Encore! command line debugger has also been ported to windoze
+and is typically built using the mingw compiler (a gnu gcc compiler
+which produces native windoze executables). 
+
+Mingw and msys can be obtained from
+	http://www.mingw.org
+
+A port of the gnu readline library for windoze can be found at
+	http://gnuwin32.sourceforge.net
+
+TCL source can be found at
+	http://www.tcl.tk
+A windows binary distribution of ActiveTcl 
+  can be found from ActiveState at
+	http://www.activestate.com/Products/ActiveTcl/
+

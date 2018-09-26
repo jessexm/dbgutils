@@ -1,0 +1,48 @@
+README - ez8mon
+----------------------------------------------------------------
+BUILDING
+
+See the INSTALL file for how to build ez8mon, flashutil, 
+and crcgen.
+----------------------------------------------------------------
+RUNNING
+
+See information in the docs/ directory for running the
+ez8mon debugger, flashutil, and crcgen utilities.
+----------------------------------------------------------------
+Release Notes - 01/29/2002
+KNOWN ISSUES
+
+1) receive overrun errors 
+
+Some heavily loaded pc's (especially laptops) exhibit serial receive
+overrun errors frequenty. This is due to the operating system not
+responding to interrupts in a timely fashion.
+
+A software workaround has been implemented to eliminate this problem.
+Since almost all standard UART fifo's are at least 16 bytes deep, the
+software workaround limits packet sizes to 16 bytes. Therefore, the
+hardware fifo will never overflow so the response time of the
+operating system is no longer a problem.
+
+This workaround slows down data rates so it should only be used if
+problems occur. This option can be enabled on the commandline or in
+the config file.
+
+command line:
+	`ez8mon -t 16'
+
+config file (ez8mon.cfg):
+	mtu = 16
+
+2) buffer sizes 
+
+There appears to be a limitation on the serial buffer size on most
+operating systems. Experimentation has shown this buffer size
+limitiation to be 4k on Windows NT 4.0 and Windows XP (other varients of
+windows were not tested). Solaris 9 was determined to have a buffer
+limitation of 16k.
+
+----------------------------------------------------------------
+
+

@@ -1,0 +1,236 @@
+Z8 Encore OCD network client/server protocol
+2003/04/04
+--------------------------------
+
+
+Overview
+--------------------------------
+This document describes the network client/server protocol used by the
+Z8 Encore command line debugger.
+
+This client/server protocol is an ascii based command/response
+protocol used to write raw data to the OCD physical link layer. Is is
+a client driven protocol. The client sends a command to the server,
+the server executes the command and then returns a response.
+
+The data format between the client/server is line oriented. Each line
+is terminated by a CRLF sequence. The client or server can insert
+extra CRLF sequences between commands to make the transmission more
+readable. The maximum line length is 256 bytes, which is the minimum
+size for BUFSIZ on all systems.
+
+Each command or response sent between the client server consists of
+words. These words may be separate by one or more space ' ' or tab
+'\t' characters.
+
+The client or server may embeded comments within the protocol. A
+comment is indicated by the pound '#' character and continues to the
+end of the line.
+
+The client initiates all commands. It will send a command word,
+followed by any necessary data. The client will terminate the request
+with a CRLF sequence.
+
+The server responds by sending +OK or -ERR, followed by any necessary
+data. The server will terminate the response with a CRLF sequence.
++OK is returned for a valid completed command. -ERR is returned if an
+error occurs.
+
+If a client sends an invalid request, the server will responds with
+-ERR.
+
+
+SERVER VERSION
+--------------------------------
+
+When the client first connects to the server, the server immediately
+responds with
+
+	+OK Z8ENCOREOCD <VERSION> 
+
+The VERSION field is formatted as MAJOR.MINOR with major and minor
+being decimal integers with values from 0-255.
+
+Upon initial connection to the server, the client should issue the
+STATUS command and determine if the server requires the user to login
+before commands are issued.
+
+
+Client Commands
+--------------------------------
+The client has the following commands available.
+
+	RESET
+	READ
+	WRITE
+
+	USER
+	STATUS
+	CLOSE
+
+The following is a description of each command.
+
+
+[STATUS]
+
+The status command causes the server to return status information.
+Valid status responses are:
+
+	AUTH
+	UP
+	DOWN
+
+The AUTH status response is only returned during initial connection if
+the server requires the user to login and authenticate before issuing
+the RESET, READ, or WRITE commands. If authentication is required, the
+user should login using the USER command.
+
+If the client has authenticated sucessfully, then the server will
+respond to the STATUS command with UP or DOWN. The server will respond
+with UP if the OCD physical link layer is ready for communication. If
+the ocd link layer is UP, the client can issue the READ or WRITE
+command. If the link layer is DOWN, the the client cannot issue the
+READ or WRITE commands until the RESET command is issued and the link
+layer is UP.
+
+
+[RESET] 
+
+This command causes the server to reset the ocd physical link layer.
+The specific action depends upon the type of link. If the physical
+link layer is a serial interface, this command will cause the server
+to send a serial break on the line, then autobaud the remote serial
+device. If the physial link layer is a parallel interface, then this
+command will cause server to reset the parallel link and resend
+IEEE1284 negotiation.
+
+The server will respond with +OK if the link was reset sucessfully and
+is now UP. If an error occurred, the server will respond with -ERR and
+the link will enter or remain in the DOWN state. For a serial
+interface, a reset error will occur if the autobaud character is not
+read back due to the implicit loopback. For parallel interfaces, a
+reset error will occur if IEEE1284 negotiation fails.
+
+
+[WRITE] 
+
+This command will cause the server to send data on the ocd physical
+link layer. The link must be in the UP state before this command can
+be issued.  This command is followed by a series of data bytes to
+write. The data bytes are individual octets separated by whitespace
+(spaces, tabs, or newline characters). Data values are interpreted as
+decimal by default, octal if prefixed by '0', or hex if prefixed by
+'0x' or '0X'. The client must signal the end of data by sending a
+blank line.
+
+The server will respond with +OK if the data was sent on the physical
+link layer sucessfully. 
+
+If a physical link layer error occurs during the write command, the
+server will return -ERR and enter the DOWN state. For serial
+connections, physical link layer errors include serial readback
+failure (due to implicit loopback), transmit collisions, or serial
+break detect. For parallel port connections, physical link layer
+errors include loss of IEEE1284 negotiation or IEEE1284 timeouts.
+
+
+[READ]
+
+This command will cause the server to read data from the ocd physical
+link layer. This command is followed by the number of bytes to read.
+
+If the data was sucessfully read from the ocd link layer, the server
+responds with +OK, followed by the data. 
+
+If an error occurs, the server responds with -ERR and automatically
+enters the DOWN state. For serial connections, errors include read
+timeouts, framing errors, or break detect. For parallel port
+connections, errors include read timeouts or loss of IEEE1284
+negotiation.
+
+
+[USER]
+
+This command is used to authenticate a client. It is only necessary to
+issue this command if STATUS returns AUTH. 
+
+The user command is formatted as
+	USER <username> AUTH <authentication-type>
+
+Valid authentication types recognized are
+
+	MD5
+	PLAINTEXT
+
+If the authentication method is supported and enabled by the server,
+then the server will respond with +OK. If the authentication method is
+not supported, then the server will respond with -ERR.
+
+For PLAINTEXT authentication, the server will simply respond with +OK.
+The client should then send the password in plaintext.
+
+For MD5 authentication, the server will respond with
+
+	+OK CHALLENGE <128-bit-challenge>
+
+The challenge is a 128 bit ascii encoded hexadecimal number. This
+challenge is a random number generated by the server.
+
+Upon reception of the challenge, the client should should return a 128
+bit md5 response encoded as ascii hex. This md5 response is computed
+as the md5 hash of the concatination of the received challenge and the
+md5 hash of the users password.
+
+If authentication is successful, the server responds with +OK. If 
+authentication fails, the server responds with -ERR. If authentication 
+fails, the client may reissue the USER command.
+
+
+Examples
+--------------------------------
+
+The following is a sample client/server transaction. Data sent by
+the client is prefixed by 'C:'. Data returned by the server is
+prefixed by 'S:'.
+
+S:+OK Z8ENCOREOCD 1.00 #build March 23, 2003 
+C:STATUS
+S:+OK AUTH 
+C:USER mike AUTH MD5
+S:+OK CHALLENGE 58443CEBE3879B7D5488920583768745
+C:A333F0A04013B8F844668CE04504A4FB
+S:+OK #authentication sucessful
+C:STATUS
+S:+OK DOWN
+C:RESET
+S:+OK
+C:STATUS
+S:+OK UP
+C:WRITE 
+C:0x00
+C:
+S:+OK 
+C:READ 0x02			
+S:+OK 
+S:0x00 0x00
+C:WRITE 
+C:0x08 0x01 0x00 0x20 0x00 0x01 0x02 0x03 
+C:0x04 0x05 0x06 0x07 0x08 0x09 0x0a 0x0b 
+C:0x0c 0x0d 0x0e 0x0f 0x10 0x11 0x12 0x13 
+C:0x14 0x15 0x16 0x17 0x18 0x19 0x1a 0x1b 
+C:0x1c 0x1d 0x1e 0x1f
+C:
+S:+OK
+C:WRITE 
+C:0x09 0x01 0x00 0x20
+C:
+S:+OK
+C:READ 0x20
+S:+OK
+S:0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07
+S:0x08 0x09 0x0a 0x0b 0x0c 0x0d 0x0e 0x0f
+S:0x10 0x11 0x12 0x13 0x14 0x15 0x16 0x17
+S:0x18 0x19 0x1a 0x1b 0x1c 0x1d 0x1e 0x1f
+C:STATUS
+S:+OK UP
+

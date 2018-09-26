@@ -1,0 +1,1491 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename ez8mon.info
+@setcontentsaftertitlepage
+@settitle ez8mon
+@c %**end of header
+
+@dircategory ZiLOG Engineering Tools
+@direntry
+* ez8mon: (ez8mon).    Z8 Encore command-line debugger.
+@end direntry
+@ignore
+@copying
+This is the users manual for ez8mon, a command-line debugger for
+the Zilog Z8 Encore family.
+
+This code is governed under the following copyrights.
+
+Copyright @copyright{} 2002,2003 Zilog, Inc. 
+
+Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All 
+rights reserved.
+
+@quotation
+Permission is hereby granted to freely distribute this program in
+binary or source code form, as long as the copyright notice is
+retained in all documents and source code.  
+@end quotation
+@end copying
+@end ignore
+@setchapternewpage odd
+
+@titlepage
+@title ez8mon 
+@subtitle A command-line debugger for the Z8 Encore!
+@page
+@c @vskip Opt plus 1filll
+@c @insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top ez8mon
+@end ifnottex
+
+@c @insertcopying
+
+@menu
+* Introduction::              Introduction to the Z8 Encore 
+                                command line debugger.
+* Connecting to the Device::  Starting the debugger and connecting 
+                                to a target.
+* Commands::                  Debugger commands.
+* Tcl Interface::             Tcl scripting interface
+@end menu
+
+
+@node Introduction
+@chapter Introduction
+@cindex ez8mon, features
+
+The @command{ez8mon} program is a command line debugger for the Z8
+Encore family of devices. It has several features, including
+
+@itemize @bullet
+@item 
+Communicating with the Z8 Encore On-Chip Debugger.
+
+@item 
+Programming the flash.
+
+@item 
+Viewing and modifing registers, ram, program memory, and external data
+memory.
+
+@item 
+Single stepping instructions.
+
+@item 
+Disassembling and displaying code.
+
+@end itemize
+
+The Z8 Encore command-line debugger @command{ez8mon} is used to debug
+Z8 Encore microcontroller applications.  It communicates with the
+on-chip debugger on Z8 Encore microcontrollers.  Applications can be
+debugged in-circuit using the microcontroller itself, no in-circuit
+emulator is needed. 
+
+The command-line debugger @command{ez8mon} operates directly on raw
+machine code. It has no knowledge of symbol information.  For this
+reason, ez8mon is typically only used to debug assembly programs.
+Debugging C code is difficult without symbol information since a single
+line of C code may consist of several assembly instructions.
+
+
+@node Connecting to the Device
+@chapter Connecting to the Device
+
+The command line debugger is invoked by issuing the command
+@samp{ez8mon [OPTIONS]}.
+
+Upon startup, @command{ez8mon} will try and read settings from a
+configuration file.  After reading the configuration file, ez8mon will
+parse any command-line options, which will over-ride any settings in
+the config file.  These settings tell ez8mon where and how to connect
+to the target.
+
+If ez8mon connects to a target sucessfully, a prompt similar to the
+following will be displayed.
+
+@example
+@group
+Connected to /dev/ttyb @ 115200
+Z8 Encore! command line debugger - build Apr  4 2003 11:53:52
+Type 'H' for help
+
+ez8mon> 
+@end group
+@end example
+
+@menu
+* Connection types::      Various connection types.
+* Configuration File::    Settings in the configuration file.
+* Command line options::  Options for the debugger.
+@end menu
+
+
+@node Connection types
+@section Connection types
+
+The @command{ez8mon} debugger can connect to the Z8 Encore On-Chip
+Debugger in a number of ways.  The most common connection type is the
+serial port when the application board is connected directly to the
+host debugging machine.  If using the Z8 Encore emulator, the parallel
+port interface is used.  The debugger can also connect to another
+remote debugger using TCP/IP network protocol.
+
+@menu
+* Serial connections::    Serial port connections.
+* Parallel connections::  Parallel port connections.
+* TCP/IP connections::    TCP/IP network connections.
+@end menu
+
+@node Serial connections
+@subsection Serial connections
+
+Serial port connections are the most commonly used connection type.  It
+is the only type that actually connects to the Z8 Encore chip.
+
+This connection type uses the standard serial port availble on most
+all PC's and laptops.  The interface from the serial port to the Z8
+Encore must go through an adaptor (dongle) which converts the RS232
+signals into a TTL compatible, open-drain, half duplex communications
+link.
+
+The @command{ez8mon} debugger is setup to use serial port connections
+by default.  You can set this as the default type by adding the
+following line in the config file.
+
+@example
+connection = serial
+@end example
+
+By default, the debugger will auto-search each available serial port
+for a connected Z8 Encore OCD device.  You can specify auto-search or
+a specific serial port in the config file, or by specifying it as an
+option on the command line.  Config file entries look like the
+following.
+
+@example
+device = auto        # auto-search for serial port
+device = com1        # use com1, com2 on windows machines
+device = /dev/ttyS0  # use /dev/ttyS0, /dev/ttyS1 on linux machines
+device = /dev/ttya   # use /dev/ttya, /dev/ttyb on solaris machines
+@end example
+
+The @command{ez8mon} debugger uses a baudrate of @var{57600} by
+default.  A different baudrate can be specified in the config file or
+with a command-line option.
+
+@example
+baudrate = 57600
+@end example
+
+@node Parallel connections
+@subsection Parallel connections
+
+The parallel port connection type is only used for the Z8 Encore
+emulator.  Only certain versions of @command{ez8mon} have parallel
+port support.  Most people use the Zilog ZDS GUI to take full
+advantage of the trace capability the emulator provides.
+
+The parallel port connection type is specified by adding the following
+entry in the config file.
+
+@example
+connection = parport
+@end example
+
+Valid devices depend upon the operating system.  Sample entries are
+shown below.
+
+@example
+device = lpt1       # use lpt1, lpt2 for windows systems
+device = /dev/lp0   # use /dev/lp0, /dev/lp1 for linux systems
+device = /dev/ecpp0 # use /dev/ecpp0 for solaris systems
+@end example
+
+
+@node TCP/IP connections
+@subsection TCP/IP connections
+
+The @command{ez8mon} debugger has the capability of acting as a
+network server or network client.  This allows people to debug
+applications remotely.
+
+@menu 
+* TCP/IP server::   Running as a server
+* TCP/IP client::   Running as a client
+@end menu
+
+
+@node TCP/IP server
+@subsubsection TCP/IP server
+
+The @command{ez8mon} debugger can operate as a network server.  This
+allows one to connect from a remote machine to the Z8 Encore OCD
+connected to the local machine.
+
+When using the TCP/IP server, the local connection should first be
+setup properly.  The @samp{connection}, @samp{device}, and
+@samp{baudrate} parameters should be setup in the configuration file
+or via the command-line options.
+
+The debugger is placed into server mode by specifying the
+@samp{server} parameter in the configuration file, or by the @samp{-s}
+command-line option.  The argument to pass to these parameters is
+formatted as follows
+
+@example
+[user1:pass1[,user2:pass2]*@@][interface][:port]
+@end example
+
+The username/password pairs before the '@@' sign are optional.  If
+specified, users will be required to authenticate before connecting to
+this server.  Multiple username/password pairs may be specified by
+separating them with commas ','.
+
+Passwords may be specified as either plaintext, or as md5 hashes by
+prefixing the hash with @samp{md5=}.  Using md5 hashes is useful to
+prevent people from seeing your password in plaintext if they look at
+your config file. MD5 hashes can be obtained using the @samp{-m}
+command-line option, or with the unix command @command{echo -n
+'password' | md5sum}.
+
+If @samp{interface} is specified, the debugger will only bind to the
+specified IP interface.  The server will bind to all interfaces by
+default.
+
+If @samp{:port} is specified, the server will listen on the specified
+TCP/IP port.  The server will use port @var{6910} as the default if
+one is not specified.
+
+If authentication is used, the authentication is done using a
+challenge/response protocol.  If a plaintext password is specified, it
+is hashed with the md5 function before being used by the server or
+the client.  When the client receives the 128 bit challenge from the
+server, it appends the md5 hash of the users password to the end of
+the challenge, and then computes a new 128 bit md5 hash of both the
+challenge and the password hash as the response.  No plaintext
+passwords or password hashes ever transverse the network.
+
+If the plaintext password or md5 hash is stored in the configuration
+file, this configuration file should have appropriate access
+protections.  If the plaintext password or the md5 hash of the
+password is compromised, a malicious user can use it to gain access to
+the OCD server.
+
+Storing md5 password hashes in the configuration file instead of
+plaintext passwords only prevents someone from quickly glancing at a
+configuration file to obtain the password.  If someones copies the
+password hash, they can use it to gain access to the OCD server.
+
+
+@node TCP/IP client
+@subsubsection TCP/IP client
+
+The TCP/IP network client can be used to debug Z8 Encore applications
+on a remote server across a network.  The debug console works the same
+as local connections.
+
+The @command{ez8mon} debugger can connect to a remote server by
+specifying the connection in the configuration file, or by
+command-line options.
+
+To specify a network connection in the configuration file, set the
+@samp{connection} parameter to @samp{tcpip}, and the @samp{device}
+parameter to the network connection.  The network connection can also
+be specified on the command-line using the @samp{-n} option.
+
+The network connection device should be specified as follows.
+
+@example
+[username:password@@][server][:port]
+@end example
+
+The @samp{username:password@@} field only needs to be specified if
+authentication is required.  The password may be specified as
+plaintext, or by a md5 hash by prefixing the hash with @samp{md5=}. 
+
+The @samp{server} field should point to
+the machine running the OCD server.  This can be a symbolic name that
+is looked up using the systems network name resolution, or an IP
+address.  If not specified, @samp{server} defaults to @samp{localhost}.
+
+If @samp{:port} is specified, the client will connect to the specified
+tcp port on the server.  The @samp{:port} field defaults to port
+@var{6910}.
+
+
+@node Configuration File
+@section Configuration File
+
+At startup, @command{ez8mon} looks for a configuration file named
+@file{ez8mon.cfg}.  It will look in the current directory first.  If
+@file{ez8mon.cfg} does not exist in the current directory,
+@command{ez8mon} will look in the directory pointed to by the HOME
+enviroment variable if it exists.  If the file does not exist in
+either location, then @command{ez8mon} defaults to a serial
+connection, 57600 baud, autosearch for serial port, and 20MHz clock.
+
+The file @file{ez8mon.cfg} can specify default options rather than
+specifying them on the command line every time. The file is formatted
+as follows.
+
+The characters '#' and ';' are comment delimiters.  Any text following
+these characters up to the end of the line is considered a comment.
+
+Options in the file are in the form of 'key = value' pairs, when each
+option separated by a newline.
+
+Valid key/value pairs are:
+
+@table @code
+@item connection
+The @samp{connection} parameter specifies the type of connection.
+Valid connection types are @samp{serial}, @samp{parport}, and
+@samp{tcpip}.  The default connection type is @samp{serial}.
+
+@item device
+The @samp{device} parameter specifies the device to use for the
+@samp{connection}.  Valid values for this parameter depends upon the
+type of connection.  See the specific connection type section for more
+details.  This parameter defaults to @samp{auto} for serial port
+connections.
+
+@item baudrate
+The @samp{baudrate} parameter specifies the speed of the serial
+connection.  This parameter is only valid for @samp{serial} connection
+types.
+
+@item mtu
+The @samp{mtu} parameter specifies the maximum transmission unit.
+This is the maximum packet size that will be sent to or requested from
+the Z8 Encore OCD.  This is used to split the communication into
+smaller packet sizes if the host machines has overrun error problems.
+
+@item clock
+The @samp{clock} parameter is the system clock frequency.  It is used
+to time flash program and erase operations.  The numerical value may
+be suffixed with @samp{k}, @samp{kHz}, @samp{M}, or @samp{MHz}.
+
+@item server
+The @samp{server} parameter will cause the debugger to enter server
+mode.  See the TCP/IP connections sections for more details.
+
+@item cache 
+The @samp{cache} parameter can be used to disable internal memory
+cache lookups if set to @samp{disabled}. 
+
+@item repeat
+The @samp{repeat} parameter is used to set the minimum block size for
+repeat summary. If set to zero, block summaries will be disabled and
+will always be expanded. The default minimum repeat size is 64 bytes.
+
+@end table
+
+@node Command line options
+@section Command line options
+
+The supported @command{ez8mon} command line option can be listed by
+specifying the @samp{-h} option to @command{ez8mon}.
+
+@example
+@group
+Usage: ez8mon [OPTIONS]
+Z8 Encore! command line debugger.
+
+  -h                         show this help
+  -p DEVICE                  connect to specified serial port device
+  -b BAUDRATE                connect using specified baudrate
+  -l                         list valid baudrates
+  -t MTU                     set maximum ocd packet size
+  -c FREQUENCY               use specified clock frequency for flash
+                               program/erase oprations
+  -s [:PORT]                 run as tcp/ip server
+  -n [SERVER][:PORT]         connect to tcp/ip server
+  -m TEXT                    calculate and display md5hash of text
+  -d                         dump raw ocd communication
+  -D                         disable memory cache
+  -S SCRIPT                  run tcl script
+
+@end group
+@end example
+
+@table @code
+@item -h
+This option displays a listing of all the supported command line
+options.
+
+@item -p DEVICE
+This option specifies the serial port to use.
+
+@item -b BAUDRATE
+This option will connect to the serial port using the specified
+baudrate.
+
+@item -l
+This option will list valid baudrates.
+
+@item -t MTU 
+This option sets the maximum transmission unit.  This limits the
+size of transmit and receive packet sizes for communication with the
+Encore OCD.  This is useful if the host system has problems with
+overrun errors.
+
+@item -c FREQ
+This specifies the operating frequency of the remote Encore device.
+This is needed to program the flash frequency registers for program
+and erase operations.
+
+@item -s [INTERFACE][:PORT]
+This puts the debugger into TCP/IP server mode.  The default port if
+not specified is 6910.  If [interface] is specified, the debugger will
+bind to the specified IP (the default will bind to all interfaces).  
+
+@item -n [SERVER][:PORT]
+This will cause the debugger to connect to a remote server.  If
+[server] is not specified, the debugger will attempt to connect to
+localhost.  If [:port] is not specified, the debugger will use the
+default port of 6910.
+
+@item -m TEXT
+This will calculate the md5hash of the text.  This is used to generate
+a hash to save as the password in the configuration file for network
+connections.
+
+@item -d
+This will display the raw OCD communication as the debugger operates.
+
+@item -D
+This option will disable the use of the internal memory cache.
+
+@item -S SCRIPT 
+This option will invoke the Tcl interpreter and execute SCRIPT.
+Additional arguments passed on the command line will be passed to the
+script. Option arguments (arguments that begin with a hyphen '-') can be
+passed to the script by stopping option processing using double hyphens
+'--'. Otherwise all remaining options will be interpreted by ez8mon and
+will not be passed to the tcl script.
+@end table
+
+
+@node Commands
+@chapter Commands
+
+The command line debugger ez8mon has the following commands.
+
+@menu
+* Displaying Help::            Displaying quick help.
+* Displaying Info::            Displaying device information.
+* Loading a File::             Load a hexfile into memory.
+* Displaying Memory::          Display memory.
+* Altering Memory::            Altering memory.
+* Filling Memory::             Filling memory.
+* Erasing Memory::             Erasing memory.
+* Displaying Registers::       Displaying registers.
+* Modifying Registers::        Modifying Registers
+* Setting Breakpoints::        Setting breakpoints.
+* Clearing Breakpoints::       Clearing breakpoints.
+* Disassembling Instructions:: Disassembling instrutions.
+* Stepping Into::              Single stepping an instruction.
+* Stepping Over::              Stepping over subroutines.
+* Running Code::               Executing the program.
+* Resetting::                  Resetting the part.
+* Shell::                      Getting a shell.
+* Exiting::                    Exiting the debugger.
+@end menu
+
+All of the ez8mon commands are single character commands.  Pressing
+the character associated with a command executes that command. Most
+commands typically prompt for further input specific to that command.
+Command characters are case in-sensitive.
+
+All of the commands recognize the @kbd{@key{ESC}} key which will abort
+the command currently in progress and return to the @samp{ez8mon>}
+prompt.
+
+The @command{ez8mon} program can be terminated at any time by pressing
+@kbd{@key{CTRL}-c}, although this is not recommended.  Exiting the
+@command{ez8mon} program in this manner does not remove any
+breakpoints that have been set.  The recommended way to exit the
+@command{ez8mon} program is to issue the @kbd{Q}uit command. This will
+restore (remove) any breakpoints that were set before the program
+exits.
+
+
+@node Displaying Help
+@section @kbd{H} - Displaying Quick Help
+
+A brief summary of all the command keys supported by ez8mon can be
+obtained by using the @kbd{H}elp command.
+
+@example
+@group
+ez8mon> h
+Z8 Encore! command line debugger - build Apr  4 2003 11:53:52
+
+        A - alter memory
+        B - set/show breakpoints
+        C - clear breakpoints
+        D - display memory
+        E - erase memory
+        F - fill memory
+        G - run program
+        H - display help
+        I - info
+        L - load program memory from file
+        M - modify registers
+        N - next (step over calls)
+        Q - exit debugger
+        R - display working registers
+        S - step (step into calls)
+        U - unassemble instructions
+        Z - reset
+        ! - shell
+
+ez8mon> 
+@end group
+@end example
+
+
+@node Displaying Info
+@section @kbd{I} - Displaying Device Information
+
+The @kbd{I}nfo command is used to display information about the
+device the debugger is connected to.
+
+@example
+@group
+ez8mon> i
+DBGREV:       0120
+PSI:          Z8F6425FT020SC
+MEMSIZE:      64k = 0000-FFFF
+CRC:          84C3
+CODE PROTECT: disabled
+
+ez8mon>
+@end group
+@end example
+
+The DBGREV field is the on-chip debugger revision. It is used by the
+host debugging software to determine what OCD commands are available.
+
+The PSI field indicates the part number of the device. If the memory
+read protect option is enabled, this field is not available.
+
+The MEMSIZE field indicates the amount of program memory available on
+the device.
+
+The CRC field is the cyclic-redundency-check of program memory.  This
+can be used to verify code integrity.  The CRC field is available even
+when the memory read protect option is enabled.
+
+The CODE PROTECT field indicates weather or not the memory read
+protect is enabled or disabled.
+
+
+@node Loading a File
+@section @kbd{L} - Loading a Hexfile
+
+The @kbd{L}oad command is used to program memory from an intel
+hexfile.  The debugger will prompt for a file to load. 
+
+@example
+@group
+ez8mon> l
+File: sample.ihx
+PC: 0074  SP:C79D  RP:EF  FLAGS:29  [  s d ]
+Regs: 00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00 
+  0074: 01 E0            srp   #%E0
+
+ez8mon> 
+@end group
+@end example
+
+The debugger performs a lot of steps in order to program the contents
+of the hexfile into memory.  The following steps are all done
+automatically by the load hexfile command.
+
+@enumerate
+@item 
+Mass Erase - The flash controller is unlocked, the flash frequency
+registers are setup, and the mass erase command is issued to the
+on-chip flash controller.
+
+@item
+Reset (optional) - If the memory read protect is enabled, the part is
+reset to clear the read protect.
+
+@item
+Program - The flash controller is unlocked, the flash frequency
+registers are setup, and the contents of the intel hexfile are
+programmed into memory. When the programming operation is complete,
+the flash controller is locked.
+
+@item
+Verify - The CRC is read and checked against the expected CRC to
+verify that the flash memory was programmed correctly.
+
+@item
+Reset - After the flash is programmed and verified, the part is reset.
+If the memory read protect is not enabled, the standard registers and
+the first instruction will be displayed.
+@end enumerate
+
+The @kbd{L}oad command uses an intelligent search algorithm when
+programming the flash from a hexfile.  If a block of four or more
+consecutive bytes of data 0xff is found, the block will be skipped and
+will not be programmed.  Since the erased value of the flash is 0xff,
+this saves programming time plus it extends the life of the flash.
+
+The @kbd{L}oad command supports filename tab completion.  If the
+@key{TAB} key is pressed when only a partial filename is entered, the
+remaining part of the filename will automatically be filled in if
+enough unique characters are present.  If more than one file exists
+with the same starting partial filename, then the BELL will ding to
+indicate that more input characters are needed.  If @key{TAB} is
+pressed a second time, a listing of all filenames that match the
+partial filename entered will be displayed.  The names of previously
+loaded files are remembered and can be itenerated through by pressing
+@kbd{@key{CTRL}-p}.
+
+
+@node Displaying Memory
+@section @kbd{D} - Displaying Memory
+
+Memory can be displayed using the @kbd{D}isplay command.  The
+@kbd{D}isplay command can display program memory, external data
+memory, or register file memory.
+
+@example
+@group
+ez8mon> d
+[P]rogram, [D]ata, [R]file: p
+Address: 80c
+Size: 97
+0800:                                      0C 0D 0E 0F              ....
+0810: 10 11 12 13 14 15 16 17  18 19 1A 1B 1C 1D 1E 1F  ................
+0820: 20 21 22 23 24 25 26 27  28 29 2A 2B 2C 2D 2E 2F   !"#$%&'()*+,-./
+0830: 30 31 32 33 34 35 36 37  38 39 3A 3B 3C 3D 3E 3F  0123456789:;<=>?
+0840: 40 41 42 43 44 45 46 47  48 49 4A 4B 4C 4D 4E 4F  @@ABCDEFGHIJKLMNO
+0850: 50 51 52 53 54 55 56 57  58 59 5A 5B 5C 5D 5E 5F  PQRSTUVWXYZ[\]^_
+0860: 60 61 62 63 64 65 66 67  68 69 6A 6B 6C 6D 6E 6F  `abcdefghijklmno
+0870: 70 71 72 73 74 75 76 77  78 79 7A 7B 7C 7D 7E 7F  pqrstuvwxyz@{|@}~.
+0880: 80 81 82 83 84 85 86 87  88 89 8A 8B 8C 8D 8E 8F  ................
+0890: 90 91 92 93 94 95 96 97  98 99 9A 9B 9C 9D 9E 9F  ................
+08A0: A0 A1 A2                                          ...
+
+ez8mon> 
+@end group
+@end example
+
+After the @kbd{D}isplay command is entered, the debugger will prompt
+for the memory space that you want to display.  Enter @kbd{P} to
+select program memory, @kbd{D} to select external data memory, or
+@kbd{R} to select register file memory.
+
+After the memory space is selected, the debugger will prompt for a
+starting address and size. The address and size should both be entered
+in hex.
+
+Once the memory space, address, and size are entered, the debugger
+will read and display the requested data.  The memory address is
+displayed in the far left column.  The address will be aligned to a 16
+byte boundary.  The data is displayed in hex with up to 16 bytes
+displayed per line.  The column on the far right of the display is the
+ascii characters associated the data.  If the ascii character is a
+non-printable character, a period @samp{.} is displayed instead.
+
+If a breakpoint occurs in the range of program memory being displayed,
+the debugger will substitue the value that would be there if the
+breakpoint was not set.
+
+When displaying program memory, the debugger may fetch data from its
+memory cache instead of reading it out of the device.  The debugger
+will check the program memory CRC and compare it to the CRC of its
+memory cache before using any data from the cache.  The debugger will
+re-validate its memory cache every time an operation occurs which
+could alter program memory. Usage of the memory cache can be disabled
+by setting @samp{cache = disabled} in the config file or by specifying
+@samp{-D} on the command line.
+
+If a large block of data repeats, the memory block will be summarized
+with the text @samp{(data DD repeats NNNN times)}.
+
+@example
+@group
+ez8mon> d
+[P]rogram, [D]ata, [R]file, [I]nfo: p
+Address: e000
+Size: 2000
+(data FF repeats F10 times)
+EF10: FF FF 5A 5A 5A 5A 5A 5A  5A 5A 5A 5A 5A 5A 5A 5A  ..ZZZZZZZZZZZZZZ
+EF20: 5A 5A 5A 5A 5A 5A 5A 5A  5A 5A 5A 5A 5A 5A 5A 5A  ZZZZZZZZZZZZZZZZ
+EF30: 5A 5A FF FF FF FF FF FF  FF FF FF FF FF FF FF FF  ZZ..............
+(data FF repeats 10C0 times)
+
+ez8mon> 
+@end group
+@end example
+
+The minimum length a block of data must be before it will be
+summarized can be configured with the @samp{repeat = NNNN} parameter
+in the config file. A repeat setting of zero disables the repeat
+summary.
+
+
+@node Altering Memory
+@section @kbd{A} - Alter Memory
+
+Memory in the register file or program memory space can be modified
+using the @kbd{A}lter memory command.
+
+@example
+@group
+ez8mon> a
+[P]rogram, [D]ata, [R]file: r
+Address: 23
+0023: 26->41
+0024: 43->00
+0025: 82->23
+0026: 11->
+
+ez8mon> 
+@end group
+@end example
+
+After the @kbd{A}lter command is issued, the debugger will prompt for
+@kbd{P}rogram memory, External @kbd{D}ata memory, or @kbd{R}egister
+file memory. 
+
+After the memory space is selected, the debugger will prompt for a
+starting address.  This address should be entered in hexadecimal.
+
+Once the address is entered, the debugger will read memory and display
+the current value of each memory location and promput for a new value.
+The new value should be entered in hexadecimal.
+
+To exit the alter memory command, press @kbd{@key{ENTER}}. Pressing
+@kbd{@key{ESC}} will abort the entire command and no registers will be
+modified. 
+
+
+@node Filling Memory
+@section @kbd{F} - Filling Memory
+
+The @kbd{F}ill Memory command can be used to fill a block of memory
+with a specified value in the program memory, register file, or data
+memory space.
+
+@example
+@group
+ez8mon> f
+[P]rogram, [D]ata, [R]file: p
+Address: 1b0
+Size: 20
+Data: ed
+
+ez8mon> 
+@end group
+@end example
+
+After the @kbd{F}ill Memory command is issued, it will prompt for
+@kbd{P}rogram memory, External @kbd{D}ata memory, or @kbd{R}egister
+file memory. 
+
+After the memory space is selected, the debugger will prompt for a
+starting address.  This address should be entered in hexadecimal.
+
+After the address, the debugger will prompt for the size of the block
+of memory to fill.  This size should be entered in hexadecimal.
+
+Once the size is entered, the debugger will prompt for the data to
+fill the block of memory with.  This data should be entered in
+hexadecimal.
+
+
+@node Erasing Memory
+@section @kbd{E} - Erasing Memory
+
+The @kbd{E}rase Memory command is used to erase the part. 
+
+@example
+@group
+ez8mon> e
+Mass erase memory, are you sure [y/n] ? y
+Erasing flash
+
+ez8mon> 
+@end group
+@end example
+
+To prevent accidental erasure, this command will prompt for
+confirmation before erasing.
+
+
+@node Displaying Registers
+@section @kbd{R} - Displaying Registers
+
+The @kbd{R}egisters command displays the standard Z8 Encore registers
+and the current assembly instruction.
+
+@example
+@group
+ez8mon> r
+PC: 0074  SP:F05E  RP:E9  FLAGS:F5  [czsv h]
+Regs: FF FF F4 FF FF F4 FF FF - F4 FF FF F4 FF FF F4 FF
+  0074: 01 E0            srp   #%E0
+
+ez8mon>
+@end group
+@end example
+
+The @kbd{R}egisters command displays three lines:
+
+@itemize
+@item Special Registers
+@item Working Registers
+@item Current Instruction
+@end itemize
+
+The special registers displayed are the program counter (PC), stack
+pointer (SP), register pointer (RP), and flags (FLAGS) register.
+
+
+@node Modifying Registers
+@section @kbd{M} - Modifying Registers
+
+The @kbd{M}odify registers command can be used to modify the value of
+hardware registers including the program counter (PC), spack pointer
+(SP), register pointer (RP), or working registers (r0-r15).
+
+@example
+@group
+ez8mon> m
+Register [PC,RP,SP,R0,...,R15]: r0
+Value: 23
+
+ez8mon>
+@end group
+@end example
+
+After the @kbd{M}odify Registers command is issued, the debugger will
+prompt for the register name to modify.  
+
+After a register name has been entered, the value to set the register
+to should be entered in hexadecimal.
+
+ 
+@node Setting Breakpoints
+@section @kbd{B} - Set/Display Breakpoints
+
+The @kbd{B}reakpoints command can be used to display existing
+breakpoints and to set additional breakpoints.
+
+@example
+@group
+ez8mon> b
+B 0641: 8D 06 70         jp    %0670
+B 0647: D6 07 76         call  %0776
+Address: 668
+
+ez8mon> 
+@end group
+@end example
+
+After the @kbd{B}reakpoints command is issued, the existing
+breakpoints that are set are displayed.  The command will then prompt
+for an address to set a new breakpoint at.  If you only want to
+display the breakpoints that are currently set, you can press the
+@kbd{@key{ESC}} key to abort the command before entering an address.
+
+Breakpoints are set by replacing the first byte of the instruction
+with 00 (the Z8 Encore BRK instruction).  When memory is displayed or
+instructions disassembled, the debugger will substitute the value that
+would be in memory in place of the BRK instruction.
+
+
+@node Clearing Breakpoints
+@section @kbd{C} - Clear/Remove Breakpoints
+
+The @kbd{C}lear breakpoints command is used to remove existing
+breakpoints.
+
+@example
+@group
+ez8mon> c
+B 0641: 8D 06 70         jp    %0670
+B 0647: D6 07 76         call  %0776
+Address: 641
+
+ez8mon> 
+@end group
+@end example
+
+After the @kbd{C}lear breakpoints command is issued, it will display
+the breakpoints that are currently set. It will then prompt for an
+address of the breakpoint to remove.
+
+
+@node Disassembling Instructions
+@section @kbd{U} - Unassemble/Disassemble instructions
+
+The @kbd{U}nassemble command is used to disassemble code. It displays
+the instruction mnemonics associated with the machine code.
+
+@example
+@group
+ez8mon> u
+Address to unassemble [0634]: 
+Number of instructions to disassemble [10]: 8
+  0634: 01 E0            srp   #%E0
+  0636: E9 00 0F FF      ldx   %FFF,#%00
+  063A: E9 0F 0F FE      ldx   %FFE,#%0F
+  063E: D6 06 44         call  %0644
+B 0641: 8D 06 70         jp    %0670
+  0644: D6 04 67         call  %0467
+B 0647: D6 07 76         call  %0776
+  064A: E9 3C 0F DB      ldx   %FDB,#%3C
+
+ez8mon> 
+@end group
+@end example
+
+The @kbd{U}nassemble command will first prompt for an address to start
+disassembling from. It defaults to the current value of the program
+counter. It will then prompt for the number of instructions to
+unassemble.
+
+If a 'B' is present in the far left column, then there is currently a
+breakpoint set at that instruction. The first column of numbers is the
+memory address that instuction is located at. Following the address is
+the raw data for that instruction (machine code). The right side of
+the display is the human readable mnemonics that represents the
+machine code.
+
+The @kbd{U}nassemble command will give unexpected results if you start
+disassembling in the middle of an instruction. The disassembler does
+not know if a sequence of machine code is the opcode or operands for
+an instruction. If the disassember starts disassembling in the middle
+of an instruction, it may compute the wrong size for the current
+instruction and start disassembling subsequent instructions at the
+wrong boundary.
+
+
+@node Stepping Into
+@section @kbd{S} - Stepping Into
+
+The @kbd{S}ingle step command is used to single step instructions.
+The debugger will cause the CPU to execute one assembly instruction.
+
+@example
+@group
+ez8mon> s
+PC: 0636  SP:0EF8  RP:E0  FLAGS:02  [      ]
+Regs: 00 00 01 2D 01 00 08 E6 - 00 E6 E6 00 E6 E6 00 E6 
+  0636: E9 00 0F FF      ldx   %FFF,#%00
+
+ez8mon> 
+@end group
+@end example
+
+As a convience, once the @kbd{S}ingle step command completes, it
+displays the new values of the registers and the next instruction that
+the program counter points to.
+
+Note that the single step command does not display the instruction it
+just executed.  If you want to see the instruction the single step
+command is about to execute, use the display @kbd{R}egisters command
+or the @kbd{U}nassemble command before issuing the @kbd{S}ingle step
+command.
+
+The @kbd{S}ingle step command will follow calls and step into
+subroutines.  If you want to step over call instructins, use the
+@kbd{N}ext command to step over subroutines.
+
+
+@node Stepping Over
+@section @kbd{N} - Stepping Over
+
+The @kbd{N}ext command is similar to the @kbd{S}ingle step command,
+except that it will step over call instructions instead of stepping
+into them.
+
+@example
+@group
+ez8mon> n
+PC: 0641  SP:0F00  RP:E0  FLAGS:42  [ z    ]
+Regs: 00 00 01 2D 01 00 08 E6 - 00 E6 E6 00 E6 E6 00 E6 
+  0641: 8D 06 70         jp    %0670
+
+ez8mon> 
+@end group
+@end example
+
+Subroutines may have several instructions.  To implement the step over
+command, the debugger will first inspect the current instruction.  If
+it is not a call instruction, the debugger will issue a single step
+command.  If the instruction is a call instruction, the debugger will
+insert a temporary breakpoint after the call instruction, and then
+place the part into 'run' mode.  Once the CPU stops at the next
+breakpoint, the debugger will remove the temporary breakpoint.
+
+If there is a breakpoint set in the subroutine that is being stepped
+over, the debugger will stop at the breakpoint.
+
+Depending upon the length of the subroutine, it may take a while to
+step over the routine.  If there is an infinate loop in the
+subroutine, then it is possible the CPU will never return to the
+point after the call instruction.  If this happens, the
+@kbd{@key{ESC}} key can be pressed to stop the CPU at its current
+location.
+
+
+@node Running Code
+@section @kbd{G} - Running Code (go)
+
+The @kbd{G}o command is used to put the processor into run mode.  
+
+@example
+@group
+ez8mon> g
+Running... 
+@end group
+@end example
+
+The Z8 Encore will start executing code at the current location of the
+program counter.  The CPU will execute code normally until it
+reaches a breakpoint, or until the @kbd{@key{ESC}} key is pressed.
+
+When the CPU stops, the number of clock cycles run is displayed, along
+with the current values of the hardware registers and the disassembly
+of the instruction the program counter is currently pointing to.
+
+@example
+@group
+ez8mon> g
+Running... 
+BREAK - runcount 003A
+PC: 07CC  SP:0EF6  RP:E0  FLAGS:02  [      ]
+Regs: 00 00 01 2D 00 4C 08 E6 - 00 E6 E6 00 E6 E6 00 E6 
+B 07CC: 1F A2 40         cpc   r4,r0
+@end group
+@end example
+
+
+@node Resetting
+@section @kbd{Z} - Resetting
+
+The @kbd{Z} command can be to reset the part or reset the OCD
+communication link.
+
+@example
+@group
+ez8mon> z
+Reset [L]ink, Reset [C]hip ? c
+PC: 0634  SP:0F00  RP:E0  FLAGS:42  [ z    ]
+Regs: 00 00 01 2D 01 00 08 E6 - 00 E6 E6 00 E6 E6 00 E6 
+  0634: 01 E0            srp   #%E0
+
+ez8mon> 
+@end group
+@end example 
+
+After the @kbd{Z} command is issued, the debugger will prompt if you
+want to reset the @kbd{L}ink, or to reset the @kbd{C}hip.  Resetting
+the @kbd{C}hip will cause the part to go through a power-on reset
+sequence.  It will reset all the peripherials and cause the program
+counter to vector to its reset address and stop.
+
+
+@node Shell
+@section @kbd{!} - Shell
+
+The debugger can invoke a command interpreter so you can do some work
+on the command line without actually exiting the debugger. Once you
+exit the shell, control will return to the debugger.
+
+@example
+@group
+ez8mon> !
+SHELL> make
+(output ...)
+SHELL> exit
+
+ez8mon> 
+@end group
+@end example
+
+On unix, the shell used is the value of the $SHELL environment
+variable.  On windows, the shell used is the value of the %COMSPEC%
+environment variable.
+
+
+@node Exiting
+@section @kbd{Q} - Quiting the debugger
+
+The debugger can be exited using the @kbd{Q}uit command.  
+
+@example
+@group
+ez8mon> q
+Are you sure [y/n] ? y
+@end group
+@end example
+
+To avoid accidently exiting the program, this command will prompt you
+if you are sure before actually exiting.
+
+@node Tcl Interface
+@chapter Tcl Interface
+
+The @command{ez8mon} utility includes a tcl interpreter. This tcl
+interpreter can be used to execute debugging commands from scripts.
+
+@menu
+* Running Tcl::                Invoking the tcl interpreter
+* Tcl Syntax::                 Tcl language
+* Tcl Dbg Commands::           Encore debugging tcl commands
+@end menu
+
+@node Running Tcl
+@section Running Tcl
+
+The tcl interpreter is started using the @command{-S SCRIPT} option on
+the commandline when invoking @command{ez8mon}. The following example
+executes the tcl script @file{script.tcl}.
+
+@example
+ez8mon -S script.tcl
+@end example
+
+When executing a tcl script, the @command{ez8mon} utility will connect
+to the Z8 Encore device as it normally would. There is no need to
+specify a serial port, baudrate, or clock frequency in the tcl script.
+All these parameters are taken from the @file{ez8mon.cfg} file or
+command-line options as they do during normal operation.
+
+The tcl interpreter can be run interactively, taking its input from
+@file{stdin} by specifying @file{-} for the script name.
+
+@example
+ez8mon -S -
+@end example
+
+When running a tcl script, the script gets its arguments from the
+command line. 
+
+@example
+ez8mon -S script.tcl arg1 arg2 arg3
+@end example
+
+The number of arguments and argument values are available in the
+standard tcl variables @var{$argc} and @var{$argv}. The @var{$argv}
+variable is a tcl list with each argument as an element. The name of the
+script being executed is in the the tcl variable @var{$argv0}.
+
+The order of options to @command{ez8mon} does not matter.  Therefore,
+all arguments that begin with hyphens '-' are processed as options to
+@command{ez8mon}. The first non-option argument stops option processing.
+Option processing can also be stopped with the double hyphen '--'.
+Arguments that being with a hyphen after the double hyphen will be
+passed to the tcl script.
+
+In the following example, the option @command{-b 57600} is interpreted
+by @command{ez8mon} and the @command{-b arg1} arguments are passed to
+the tcl script.
+
+@example
+ez8mon -S script.tcl -b 57600 -- -b arg1
+@end example
+
+When the tcl script is running, the device is stopped and in debug mode.
+Instructions are not executed unless the @command{dbg_run} command is
+called.  When the tcl script exits, the device is taken out of debug
+mode and the device will resume instruction execution.
+
+@node Tcl Syntax
+@section Tcl Syntax
+
+The tcl interpreter implements the tcl language.  Documentation and
+syntax of the tcl language is available from the tcl/tk developers
+website at @url{http://www.tcl.tk}.
+
+@node Tcl Dbg Commands
+@section Tcl Dbg Commands
+
+Several commands are registered with the tcl interpreter during startup
+to make use of the Z8 Encore debugging facilities. These are summarized
+in the following table.
+
+@table @code
+@item dbg_rd_id
+Read revision identifier.
+
+@item dbg_reset_link
+Reset communiation link.
+
+@item dbg_reset_chip
+Reset Z8 Encore device.
+
+@item dbg_ld_hexfile
+Load an intel hexfile into flash memory.
+
+@item dbg_run
+Run until breakpoint reached.
+
+@item dbg_go
+Run and return immediately, don't wait for breakpoint.
+
+@item dbg_stop
+Stop device from running.
+
+@item dbg_rd_pc
+Read program counter.
+
+@item dbg_wr_pc
+Write program counter.
+
+@item dbg_rd_reg
+Read register.
+
+@item dbg_wr_reg
+Write register.
+
+@item dbg_rd_regs
+Read registers.
+
+@item dbg_wr_regs
+Write registers.
+
+@item dbg_rd_mem
+Read memory.
+
+@item dbg_wr_mem
+Write memory.
+
+@item dbg_prog_mem
+Program memory.
+
+@item dbg_rd_crc
+Read memory crc.
+
+@end table
+
+@menu
+* dbg_rd_id::                  Read revision identifier
+* dbg_reset_link::             Reset communication link
+* dbg_reset_chip::             Reset Z8 Encore chip
+* dbg_ld_hexfile::             Load an intel hexfile
+* dbg_run::                    Run until breakpoint
+* dbg_rd_pc::                  Read program counter
+* dbg_wr_pc::                  Write program counter
+* dbg_rd_reg::                 Read register
+* dbg_wr_reg::                 Write register
+* dbg_rd_regs::                Read registers
+* dbg_wr_regs::                Write registers
+* dbg_rd_mem::                 Read memory
+* dbg_wr_mem::                 Write memory
+* dbg_prog_mem::               Program memory
+* dbg_rd_crc::                 Read memory crc
+@end menu
+
+@node dbg_rd_id
+@subsection dbg_rd_id
+
+The @samp{dbg_rd_id} command reads the device revision identifier. The
+identifier will be returned as an integer.
+
+@example
+set revid [ dbg_rd_id ]
+puts [ format "%04x" $revid ]
+@end example
+
+@node dbg_reset_link
+@subsection dbg_reset_link
+
+The @samp{dbg_reset_link} will reset the communication link to the
+Z8 Encore device. A serial break is sent, followed by the auto-baud
+character.
+
+@example
+dbg_reset_link
+@end example
+
+@node dbg_reset_chip
+@subsection dbg_reset_chip
+
+The @samp{dbg_reset_chip} command will reset the Z8 Encore device. 
+
+@example
+dbg_reset_chip
+@end example
+
+@node dbg_ld_hexfile
+@subsection dbg_ld_hexfile filename
+
+The @samp{dbg_ld_hexfile} command will read data from the intel hexfile
+specified by filename and write this data to the Z8 Encore device. The
+@samp{dbg_ld_hexfile} command will erase memory, program the device, and
+reset the Z8 Encore device once programming is complete.
+
+@example
+set filename "hexfile.ihx"
+dbg_ld_hexfile $filename
+@end example
+
+@node dbg_run
+@subsection dbg_run
+
+The @samp{dbg_run} command will cause the Z8 Encore device to execute
+instructions until the CPU reaches a BRK instruction. The @samp{dbg_run}
+command will return once a BRK instruction has been reached.
+
+@example
+dbg_run
+@end example
+
+@node dbg_rd_pc
+@subsection dbg_rd_pc
+
+The @samp{dbg_rd_pc} command will read the current program counter
+value. The program counter value is returned as an integer.
+
+@example
+set pc [ dbg_rd_pc ]
+puts [ format "%04x" $pc ]
+@end example
+
+@node dbg_wr_pc
+@subsection dbg_wr_pc program_counter
+
+The @samp{dbg_wr_pc} command will write the value to the program
+counter. 
+
+@example
+set pc 0x0100
+dbg_wr_pc $pc
+@end example
+
+@node dbg_rd_reg
+@subsection dbg_rd_reg address 
+
+The @samp{dbg_rd_reg} command will read one byte of data from the
+register file at the specified address. The value is returned as an
+integer. If reading a block of memory from the register file, it is
+faster to use the @samp{dbg_rd_regs} command.
+
+@example
+set addr 0x000
+set data [ dbg_rd_reg $addr ]
+puts [ format "%02x" $data ]
+@end example
+
+@node dbg_wr_reg
+@subsection dbg_wr_reg address data
+
+The @samp{dbg_wr_reg} command will write one byte of data to the
+register file at the specified address. If writing a block of memory to
+the register file, it is faster to use the @samp{dbg_wr_regs} command.
+
+@example
+set addr 0x000
+set data 0xa5
+dbg_wr_reg $addr $data
+@end example
+
+@node dbg_rd_regs
+@subsection dbg_rd_regs address size
+
+The @samp{dbg_rd_regs} command will read a block of data from the
+register file at the specified address. The data is returned as a binary
+byte array.
+
+@example
+set addr 0x000
+set size 8
+set data [ dbg_rd_regs $addr $size ]
+binary scan $data "H*" hexstr
+puts $hexstr
+@end example
+
+@node dbg_wr_regs
+@subsection dbg_wr_regs address data
+
+The @samp{dbg_wr_regs} command will write a block of data to the
+register file at the specified address. The data to be written should be
+specified as a binary byte array.
+
+@example
+set addr 0x000
+set mylist [ list 0x01 0x23 0x45 0x67 0x89 0xab 0xcd 0xef ]
+set data [ binary format "c*" $mylist ]
+dbg_wr_regs $addr $data
+@end example
+
+@node dbg_rd_mem
+@subsection dbg_rd_mem address size
+
+The @samp{dbg_rd_mem} command will read a block of mem from the device
+at the specified address. The data is returned as a binary byte array.
+
+@example
+set addr 0x0800
+set size 8
+set data [ dbg_rd_mem $addr $size ]
+binary scan $data "H*" hexstr
+puts $hexstr
+@end example
+
+@node dbg_wr_mem
+@subsection dbg_wr_mem address data
+
+The @samp{dbg_wr_mem} command will write a block of data to memory at
+the specified address. The data to be written should be specified as a
+binary byte array. 
+
+@example
+set addr 0x0800
+set data [ binary format "a*" "test string" ]
+dbg_wr_mem $addr $data
+@end example
+
+@node dbg_prog_mem
+@subsection dbg_prog_mem address data
+
+The @samp{dbg_prog_mem} command will write a block of data to memory at
+the specified address. The data to be written should be specified as a
+binary byte array. This routine will erase and program the appropriate
+memory locations to complete the write operation.
+
+@example
+set addr 0x0800
+set data [ binary format "a*" "test string" ]
+dbg_prog_mem $addr $data
+@end example
+
+@node dbg_rd_crc
+@subsection dbg_rd_crc
+
+The @samp{dbg_rd_crc} command will return the memory crc.
+The crc value is returned as an integer.
+
+@example
+set crc [ dbg_rd_crc ]
+puts [ format "%04x" $crc ]
+@end example
+
+@c @node Index
+@c @unnumbered Index
+
+@c @printindex cp
+
+@contents
+
+@bye
+

@@ -1,0 +1,139 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename crcgen.info
+@setcontentsaftertitlepage
+@settitle crcgen
+@c %**end of header
+
+@dircategory ZiLOG Engineering Tools
+@direntry
+* crcgen: (crcgen).  Intel hexfile crc generation utility.
+@end direntry
+
+@ignore
+@copying
+This is the users manual for crcgen, a utility for computing cyclic
+redundany checks of intel hexfiles.
+
+Copyright @copyright{} 2003 Zilog, Inc. 
+
+@quotation
+Permission is hereby granted to freely distribute this program in
+binary or source code form, as long as the copyright notice is
+retained in all documents and source code.  
+@end quotation
+@end copying
+@end ignore
+@setchapternewpage odd
+
+@titlepage
+@title crcgen
+@subtitle Intel hexfile crc generation.
+@page
+@c @vskip Opt plus 1filll
+@c @insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top crcgen
+@end ifnottex
+
+@c @insertcopying
+
+@menu
+* Overview::        Overview of crcgen.
+* Syntax::          Command line syntax.    
+@end menu
+
+@node Overview
+@chapter Overview
+
+The @command{crcgen} program is a command line utility used to
+generate cyclic redundany checks (CRCs) of intel hexfiles.
+
+Cyclic Redundany Check (CRC) is a type of checksum.  Other common
+types of checksums include two's complement addition and one's
+complement addition.
+
+CRC's are advantageous because they have better error detecting
+characteristics than simple arithmetic sums.  Two's complement
+addition and one's complement addition are popular because they are
+simple to calculate.  
+
+The @command{crcgen} program uses the 16 bit CRC-CCITT algorithm.  The
+polynomial used is x^16+x^12+x^5+1.  The data is shifted through the
+polynomial LSB first, which means the polynomial and crc are also
+reversed.  The initial CRC residue is preset to all ones and the final
+CRC residue is inverted.  
+
+@node Syntax
+@chapter Syntax
+
+The @command{crcgen} program has the following command line syntax.
+All options are viewable using the @samp{-h} switch.  The
+@command{crcgen} command should be followed with the filename(s) of
+intel hexfile(s) to calculate CRCs for.
+
+@menu
+* Options::
+@end menu
+
+@node Options
+@section Options
+
+@example
+@group
+SHELL> crcgen -h
+Usage: crcgen [OPTIONS] FILE
+This utility will compute the CRC of memory from an intel hexfile.
+
+  -h               show this help
+  -s MEMSIZE       specify memory size
+  -o OUTPUT        write results to FILE
+  -z               fill with 00 instead of FF
+
+This utility will return the CRC of an intel hexfile.
+
+The CRC polynomial used is x^16+x^12+x^5+1 (CRC-CCITT). The data is
+shifted through the polynomial LSB first, so the polynomial and crc are
+reversed. The CRC is preset to all one's and the final crc is inverted.
+SHELL>
+@end group
+@end example
+
+@menu
+* -h::   Display quick help.
+* -s::   Specify memory size.
+* -o::   Write to output file.
+* -z::   Fill with zeros.
+@end menu
+
+@node -h
+@subsection -h
+The @samp{-h} option displays a list of all the command line options.
+
+@node -s
+@subsection -s MEMSIZE
+The @samp{-s MEMSIZE} option specifies the memory size to compute the
+crc on.  MEMSIZE may be suffixed with @var{k} which implies
+@samp{x1024}.  The default @var{MEMSIZE} is 64k.
+
+@node -o
+@subsection -o OUTPUT
+The @samp{-o OUTPUT} option will redirect its output to
+@file{OUTFILE}.
+
+@node -z
+@subsection -z
+The @samp{-z} option will fill unspecified memory locations with 00
+instead of FF.
+
+
+@contents
+
+@bye
+
+

@@ -1,0 +1,121 @@
+CHANGELOG - ez8mon
+
+build 2004/08/06
+----------------
+* Fixed TCP/IP network client. Was broken when C++ error exceptions
+  were added, but not tested.
+
+
+build 2004/07/09
+----------------
+* Implemented read acknowledge feature to allow debugging during stopmode. 
+* Fixed failure allocating 0 bytes when all breakpoints removed.
+* Fixed exception not being caught in gnu readline. readline is a C function
+  which cannot catch exceptions, so it caused abort().
+* Added memory size for Z8F042ABA and Z8F042SAA.
+
+
+build 2004/02/15
+----------------
+* Fixed memory size for current parts (as of 2004/02/15) with NVDS.
+
+
+build 2004/01/30
+----------------
+* Fixed disassembly of LDC with offset (indexed) to be signed.
+* Fixed flashutil reset when serial port is specified on command line
+
+
+build 2003/09/04
+----------------
+* Added flashutil serialization option.
+* Fixed flashutil so it uses mtu.
+* Fixed flashutil so it works with all memory sizes, used to assume 64k.
+* Added recognition of 'k', 'kHz', 'M', 'MHz' to flashutil.
+* Added fill with 00 option to flashutil and crcgen.
+* Fixed crash when configfile not found (created when network code
+  added.
+* Added valid baudrate listings to ez8mon command-line options.
+* Added md5 hash calculation to ez8mon command-line options.
+* Changed flash controller unlock check for new flash controller.
+  
+
+build 2003/04/30
+----------------
+* Added TCP/IP client/server connection
+* Added PSI programming selection for devices not setup during 
+  final test manufacture (for engineering samples).
+* Implemented intelligent serial port timeout calculations so 
+  autoconnect/reset is faster, yet still operates at slow baudrates. 
+* Added baudrate check (sysclk/512 <= baudrate <= sysclk/4).
+* Added command-line options.
+* Added recognition of clock frequency specifications of 
+  'Hz', 'kHz', 'MHz', 'k', and 'M' as suffix modifiers.
+* Added tcpip client/server connection interface.
+
+
+build 2003/03/24
+----------------
+* Modified serial port timeouts so slower baudrate work properly.
+
+
+build 2003/03/12
+----------------
+* Added DBGREV id values for Z8F082AA and Z8F642AA 
+
+
+build 2003/02/26
+----------------
+* Fixed 'next' command stepping over calls
+
+
+build 2003/01/30
+----------------
+* Added autosearch for serial port.
+* Added MTU (maximum transmission unit) for windows machines that
+  cannot handle large bursts of data on the serial port.
+* Improved speed for loading a hexfile (10x improvement for large
+  files).
+* Fixed verbose setting in cfg file so it logs data sent/received 
+  from the OCD.
+* Fixed false error message "Memory Read Protect enabled" when
+  a serial link error occurs.
+* Added new items when testmenu enabled to access the info area.
+* Padded received CRC out to 64k bytes with 0xff. 
+
+
+build 2002/10/03
+----------------
+* Fixed programming of option bits upon startup for untested devices. 
+
+
+build 2002/09/30
+----------------
+* Rewrote ez8ocd class to use a polymorphic ocdif class. New interfaces
+  can inherit the ocdif class and implement the virtual functions. This
+  should make migrating from a serial interface to a parallel or
+  network interface very easy.
+* Cleaned up ez8ocd. Previously it did too much. Now, it only implements
+  the bare on-chip debugger commands. The checking to see if the part is
+  in debug mode, or that the memory read protect option is not enabled
+  when issuing commands has been moved to the ez8dbg class. This has 
+  cleaned up ez8ocd dramatically.
+* Removed AA stuff from debugger. Enough has changed from AA to BA that
+  trying to maintain both is cumbersome. If people want to still use AA
+  silicon, they can use the old tools/debugger. There is not much sense 
+  maintaining tools for the AA silicon since it did not go into production.
+* The previous version of the debug monitor had started to implement some
+  memory cache control mechanisms that took advantage of the new hardware
+  crc integrated into the on-chip debugger. This wasn't real perfect and
+  has been cleaned up dramatically.
+* Removing breakpoints did not work in the previous version. They do now. 
+  Breakpoints are also automatically removed when the part is mass erased.
+* Removed loading and initialization from ez8mon.cfg to an entirely separate
+  class outside the ez8dbg class. Took a lot of work, but is much cleaner 
+  now.
+* Removed integrated TCL interpreter. This was a nice idea, but the API is
+  not documented yet, so it's not very useful. That and it inflated the
+  monitor from 300k to 3Megs.
+* Changed trace buffer reads to use 64 bit frames.
+  
+

@@ -1,0 +1,198 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename flashutil.info
+@setcontentsaftertitlepage
+@settitle flashutil
+@c %**end of header
+
+@dircategory ZiLOG Engineering Tools
+@direntry
+* flashutil: (flashutil).  Z8 Encore flash programming utility.
+@end direntry
+
+@ignore
+@copying
+This is the users manual for flashutil, a flash programming utility for
+the Zilog Z8 Encore family.
+
+Copyright @copyright{} 2003 Zilog, Inc. 
+
+@quotation
+Permission is hereby granted to freely distribute this program in
+binary or source code form, as long as the copyright notice is
+retained in all documents and source code.  
+@end quotation
+@end copying
+@end ignore
+@setchapternewpage odd
+
+@titlepage
+@title flashutil
+@subtitle Z8 Encore flash programming utility.
+@page
+@c @vskip Opt plus 1filll
+@c @insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top flashutil
+@end ifnottex
+
+@c @insertcopying
+
+@menu
+* Overview::     Overview of flashutil.
+* Syntax::       Command line syntax.    
+@end menu
+
+@node Overview
+@chapter Overview
+
+The @command{flashutil} program is a command line utility used to
+program Z8 Encore devices.  
+
+The flash utility will automatically erase, blank check, program, and
+verify a device. 
+
+@example
+@group
+SHELL> flashutil data.ihx 
+Z8 Encore! Flash Utility  v1.00
+Autoconnecting to device ... found on /dev/ttyb
+Memory size: 64k
+Reading file: data.ihx ... ok
+Erasing device ... ok
+Blank check ... ok, crc: ffff
+Programming device ... ok
+Verifying ... ok, crc: 752c
+SHELL>
+@end group
+@end example
+
+
+@node Syntax
+@chapter Syntax
+
+The @command{flashutil} has the following command line syntax.  All
+options are viewable using the @samp{-h} switch.  The
+@command{flashutil} command should be followed with the filename of
+the intel hexfile to program into the device.
+
+@menu
+* Options::   Command line options.
+@end menu
+
+@node Options
+@section Options
+
+@example
+@group
+SHELL> ./flashutil -h
+Z8 Encore! Flash Utility - build Sep  4 2003 09:13:03
+Usage: ./flashutil [OPTION]... [FILE]
+Utility to program Z8 Encore! flash devices.
+
+  -h               show this help
+  -i               display information about device
+  -m               multipass mode
+  -n ADDR=NUMBER   serialize part at ADDR, starting with NUMBER
+  -e               erase device
+  -p SERIALPORT    specify serialport to use (default: auto)
+  -b BAUDRATE      use baudrate (default: 115200)
+  -t MTU           maximum transmission unit (default 0)
+  -c FREQUENCY     clock frequency in hertz (default: 18432000)
+  -s FILENAME      save memory to file
+  -z               fill memory with 00 instead of FF
+
+SHELL>
+@end group
+@end example
+
+@menu
+* -h::  Display quick help.
+* -i::  Display information.
+* -m::  Enter multipass mode.
+* -n::  Serialize device.
+* -e::  Erase device
+* -p::  Specify serialport.
+* -b::  Specify baudrate.
+* -t::  Specify maximum transmission unit.
+* -c::  Specify clock frequency.
+* -s::  Save memory to file.
+* -z::  Fill with zeros.
+@end menu
+
+@node -h
+@subsection -h
+The @samp{-h} option displays a list of all the command line options.
+
+@node -i
+@subsection -i
+The @samp{-i} option will display information about device.  It
+displays the memory size, memory CRC, and the read protect setting.
+
+@node -m
+@subsection -m
+The @samp{-m} option places the flash utility in multipass mode.
+Multipass mode is used to program multiple devices with little user
+intervention.
+
+@node -n
+@subsection -n ADDR=NUMBER
+The @samp{-n ADDR=NUMBER} option is used to serialize parts.  A serial
+number is inserted into the code at address @var{ADDR} starting with
+value @var{NUMBER}.  In multipass mode, this serial number is
+automatically incremented.  The number of bytes used for the serial
+number is the number of digits specified in the starting serial
+number.
+
+@node -e
+@subsection -e
+The @samp{-e} option is used to erase the part.  Programming
+operations automatically erase the part.  This option is only needed
+to erase parts without programming them.
+
+@node -p
+@subsection -p SERIALPORT
+The @samp{-p SERIALPORT} option specifies the serial port to use.  By
+default, the flash utility will auto-search every serial port until it
+finds a valid device.
+
+@node -b
+@subsection -b BAUDRATE
+The @samp{-b BAUDRATE} option specifies the baudrate to use.  
+
+@node -t
+@subsection -t MTU
+The @samp{-t MTU} option specifies the maximum transmission unit to
+use.  This is used to break the communication sent to and received
+from the remote device into smaller packets.  This is useful if the
+host machine has overrun error problems.  An MTU of 16 is guaranteed
+to never overflow a standard PC 16550 UART since it has a 16 byte
+hardware fifo.
+
+@node -c
+@subsection -c FREQUENCY
+The @samp{-c FREQUENCY} option specifies the clock frequency of the
+remote device.  This parameter is used to time programming and erase
+operations.  The frequency can be suffixed with 'kHz' or 'MHz'.
+
+@node -s
+@subsection -s FILENAME
+The @samp{-s FILENAME} option tells the flash utility to read the
+existing data out of the device and save it to @file{FILENAME} before doing
+any erase or program operations.
+
+@node -z
+@subsection -z
+The @samp{-z} option will fill unspecified memory locations with 00
+instead of FF.
+
+@contents
+
+@bye
+
+
