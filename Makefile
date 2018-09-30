@@ -79,10 +79,10 @@ ifdef COMSPEC
   LDFLAGS += -L$(GNUWIN32)/lib
   LIBS += -lreadline 
   LIBS += -lws2_32 -liberty
-  LIBS += -ltcl84
+  LIBS += -ltcl
 else
   OSTYPE:=$(shell uname)
-  LIBS += -ltcl8.4
+  LIBS += -ltcl
   ifeq "$(findstring Sun,$(OSTYPE))" "Sun"
     LIBS += -lresolv -lreadline -ltermcap -lsocket -lnsl
   else

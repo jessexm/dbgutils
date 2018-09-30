@@ -37,7 +37,7 @@
 
 /**************************************************************/
 
-char *serialports[] = 
+const char *serialports[] =
 #if (!defined _WIN32) && (defined __sun__)
 /* solaris */
 { "/dev/ttya", "/dev/ttyb", NULL };
@@ -49,7 +49,7 @@ char *serialports[] =
 { "com1", "com2", "com3", "com4", NULL };
 #endif
 
-const char *progname;
+char *progname;
 int verbose;
 
 /**************************************************************/
@@ -103,6 +103,8 @@ static FILE *log_proto = NULL;
 
 static int invoke_server = 0;
 static int disable_cache = 0;
+
+static int unlock_ocd = 0;
 
 int repeat = 0x40;
 int show_times = 0;
@@ -168,11 +170,9 @@ cfgfile *find_cfgfile(void)
 	struct stat mystat;
 	cfgfile *cfg;
 
-	filename = CFGFILE;
-
-	if(stat(filename, &mystat) == 0) {
+	if(stat(CFGFILE, &mystat) == 0) {
 		cfg = new cfgfile();
-		cfg->open(filename);
+		cfg->open(CFGFILE);
 		return cfg;
 	}
 
@@ -334,6 +334,7 @@ printf("  -d                         dump raw ocd communication\n");
 printf("  -D                         disable memory cache\n");
 printf("  -T                         display diagnostic run times\n");
 printf("  -S SCRIPT                  run tcl script\n");
+printf("  -u                         issue OCD unlock sequence for 8-pin device\n");
 printf("\n");
 	
 return;
@@ -361,7 +362,7 @@ void parse_options(int argc, char **argv)
 		progname = s+1;
 	}
 
-	while((c = getopt(argc, argv, "hldDTp:b:t:c:snm:vS:")) != EOF) {
+	while((c = getopt(argc, argv, "hldDTp:b:t:c:snm:vS:u")) != EOF) {
 		switch(c) {
 		case '?':
 			printf("Try '%s -h' for more information.\n", 
@@ -381,7 +382,7 @@ void parse_options(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 			break;
 		case 'p':
-			connection = "serial";
+			connection = xstrdup("serial");
 			if(device) {
 				free(device);
 			}
@@ -409,7 +410,7 @@ void parse_options(int argc, char **argv)
 			invoke_server = 1;
 			break;
 		case 'n':
-			connection = "tcpip";
+			connection = xstrdup("tcpip");
 			if(device) {
 				free(device);
 				device = NULL;
@@ -433,6 +434,9 @@ void parse_options(int argc, char **argv)
 			break;
 		case 'S':
 			tcl_script = optarg;
+			break;
+		case 'u':
+			unlock_ocd = 1;
 			break;
 		default:
 			abort();
@@ -552,16 +556,15 @@ int connect(void)
 		}
 
 		if(!strcasecmp(device, "auto")) {
-			uint16_t revid;
 			bool found = 0;
 
 			printf("Auto-searching for device ...\n");
 			for(i=0; serialports[i]; i++) {
-				device = serialports[i];
+				device = xstrdup(serialports[i]);
 				printf("Trying %s ... ", device);
 				fflush(stdout);
 				try {
-					ez8->connect_serial(device, baud);
+					ez8->connect_serial(device, baud, unlock_ocd);
 				} catch(char *err) {
 					printf("fail\n");
 					continue;
@@ -586,13 +589,13 @@ int connect(void)
 			}
 
 			try {
-				revid = ez8->rd_revid();
+				ez8->rd_revid();
 			} catch(char *err) {
 				baud = ALT_BAUDRATE;
 				ez8->set_baudrate(baud);
 				ez8->reset_link();
 				try {
-					revid = ez8->rd_revid();
+					ez8->rd_revid();
 				} catch(char *err) {
 					printf(
 "Found dongle, but did not receive response from device.\n");
@@ -607,7 +610,7 @@ int connect(void)
 			}
 		} else {
 			try {
-				ez8->connect_serial(device, baud);
+				ez8->connect_serial(device, baud, unlock_ocd);
 			} catch(char *err) {
 				fprintf(stderr, "%s", err);
 				return -1;

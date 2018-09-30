@@ -19,7 +19,7 @@ void *xmalloc(size_t n)
 
 	p = malloc(n);
 	if(!p && n) {
-		fprintf(stderr, "malloc failed allocating %d bytes\n", n);
+		fprintf(stderr, "malloc failed allocating %lu bytes\n", n);
 		exit(EXIT_FAILURE);
 	}
 
@@ -35,7 +35,7 @@ void *xcalloc(size_t elem, size_t size)
 		size_t n;
 
 		n = elem * size;
-		fprintf(stderr, "calloc failed allocating %d bytes\n", n);
+		fprintf(stderr, "calloc failed allocating %lu bytes\n", n);
 		exit(EXIT_FAILURE);
 	}
 
@@ -48,7 +48,7 @@ void *xrealloc(void *p, size_t n)
 
 	r = realloc(p, n);
 	if(!r && n) {
-		fprintf(stderr, "realloc failed allocating %d bytes\n", n);
+		fprintf(stderr, "realloc failed allocating %lu bytes\n", n);
 		exit(EXIT_FAILURE);
 	}
 
@@ -65,7 +65,7 @@ char *xstrdup(char *s)
 		size_t n;
 
 		n = strlen(s) + 1;
-		fprintf(stderr, "strdup failed duplicating %d bytes\n", n);
+		fprintf(stderr, "strdup failed duplicating %lu bytes\n", n);
 		exit(EXIT_FAILURE);
 	}
 

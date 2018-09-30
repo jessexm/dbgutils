@@ -46,7 +46,7 @@ ocd_serial::~ocd_serial(void)
  * This will open and setup the serial port.
  */
 
-void ocd_serial::connect(const char *device, int baudrate)
+void ocd_serial::connect(const char *device, int baudrate, int unlock_ocd)
 {
 	assert(device != NULL);
 
@@ -70,6 +70,8 @@ void ocd_serial::connect(const char *device, int baudrate)
 	}
 
 	open = 1;
+
+	this->unlock_ocd = unlock_ocd;
 
 	return;
 }
@@ -233,6 +235,8 @@ void ocd_serial::write(const uint8_t *buff, size_t size)
 void ocd_serial::reset(void)
 {
 	const uint8_t autobaud[1] = { AUTOBAUD_CHARACTER };
+	const uint8_t unlockseq[4] = { 0xEB, 0x5A, 0x70, 0xCD };
+	char resp[2];
 
 	if(!open) {
 		strncpy(err_msg, "Cannot reset on-chip debugger link\n"
@@ -240,13 +244,23 @@ void ocd_serial::reset(void)
 		throw err_msg;
 	}
 
-	up = 0;
-
-	serialport::flush();
-	serialport::sendbreak();
-	serialport::flush();
-
-	up = 1;
+	if (!unlock_ocd) {
+		up = 0;
+		serialport::flush();
+		serialport::sendbreak();
+		serialport::flush();
+		up = 1;
+	} else {
+		up = 1;
+		fprintf(stderr, "\npress an hold reset button then press enter key\n");
+		fgets(resp, sizeof resp, stdin);
+		write(autobaud, sizeof(autobaud));
+		// usleep(500000);
+		write(unlockseq, sizeof(unlockseq));
+		fprintf(stderr, "\nrelease reset button then press enter key\n");
+		fgets(resp, sizeof resp, stdin);
+		// usleep(500000);
+	}
 
 	write(autobaud, sizeof(autobaud));
 

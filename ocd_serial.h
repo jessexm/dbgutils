@@ -20,6 +20,7 @@ class ocd_serial : public ocd, private serialport
 {
 private:
 	bool open, up;
+	int unlock_ocd;
 
 	/* Prohibit copy constructor */
 	ocd_serial(ocd_serial &);	
@@ -28,7 +29,7 @@ public:
 	ocd_serial(void);
 	~ocd_serial(void);
 
-	void connect(const char *, int);
+	void connect(const char *, int, int = 0);
 	void reset(void);
 	void set_timeout(int);
 	void set_baudrate(int);

@@ -11,7 +11,7 @@
 #include	<string.h>
 #include	<inttypes.h>
 #include	<assert.h>
-#include	<tcl.h>
+#include	<tcl/tcl.h>
 #include	"ez8dbg.h"
 #include	"xmalloc.h"
 #include	"hexfile.h"
@@ -35,7 +35,7 @@ int dbg_cmd(ClientData clientData,
 	int objc,
 	Tcl_Obj *CONST objv[])
 {
-	switch((int)clientData) {
+	switch(reinterpret_cast<intptr_t>(clientData)) {
 	case dbg_null:
 		abort();
 		break;
@@ -124,7 +124,7 @@ int dbg_cmd(ClientData clientData,
 		/* read hexfile */
 		status = rd_hexfile(buff, MAX_MEMSIZE, filename);
 		if(status) {
-			Tcl_SetResult(interp, "Error reading hexfile", NULL);
+			Tcl_SetResult(interp, (char *)"Error reading hexfile", NULL);
 			return TCL_ERROR;
 		}
 
@@ -164,7 +164,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(pc > 0xffff || pc < 0) {
-			Tcl_SetResult(interp, "Invalid value", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid value", NULL);
 			return TCL_ERROR;
 		}
 		ez8->wr_pc(pc);
@@ -185,7 +185,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x1000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 
@@ -211,7 +211,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x1000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 		/* get data */
@@ -220,7 +220,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(value > 255 || value < -128) {
-			Tcl_SetResult(interp, "Invalid data", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid data", NULL);
 			return TCL_ERROR;
 		}
 
@@ -243,7 +243,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x1000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 
@@ -253,7 +253,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr+size > 0x1000 || size <= 0) {
-			Tcl_SetResult(interp, "Invalid size", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid size", NULL);
 			return TCL_ERROR;
 		}
 
@@ -279,13 +279,13 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x1000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 		/* get data */
 		data = Tcl_GetByteArrayFromObj(objv[2], &size);
 		if(addr+size > 0x1000) {
-			Tcl_SetResult(interp, "Invalid size", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid size", NULL);
 			return TCL_ERROR;
 		}
 
@@ -307,7 +307,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x10000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 
@@ -317,7 +317,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr+size > 0x10000 || size <= 0) {
-			Tcl_SetResult(interp, "Invalid size", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid size", NULL);
 			return TCL_ERROR;
 		}
 
@@ -343,13 +343,13 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x10000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 		/* get data */
 		data = Tcl_GetByteArrayFromObj(objv[2], &size);
 		if(addr+size > 0x10000) {
-			Tcl_SetResult(interp, "Invalid size", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid size", NULL);
 			return TCL_ERROR;
 		}
 
@@ -371,13 +371,13 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(addr >= 0x10000 || addr < 0) {
-			Tcl_SetResult(interp, "Invalid address", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid address", NULL);
 			return TCL_ERROR;
 		}
 		/* get data */
 		data = Tcl_GetByteArrayFromObj(objv[2], &size);
 		if(addr+size > 0x10000) {
-			Tcl_SetResult(interp, "Invalid size", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid size", NULL);
 			return TCL_ERROR;
 		}
 
@@ -430,7 +430,7 @@ int dbg_cmd(ClientData clientData,
 			return status;
 		}
 		if(testmode > 0xff || testmode < 0) {
-			Tcl_SetResult(interp, "Invalid value", NULL);
+			Tcl_SetResult(interp, (char *)"Invalid value", NULL);
 			return TCL_ERROR;
 		}
 		#ifdef TEST

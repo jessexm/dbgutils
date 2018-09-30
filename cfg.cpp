@@ -189,7 +189,7 @@ char *cfgfile::getline(void)
 
 /**************************************************************/
 
-char *cfgfile::trim(char *data, char *delimiters)
+char *cfgfile::trim(char *data, const char *delimiters)
 {
 	char *ptr;
 
@@ -215,7 +215,7 @@ char *cfgfile::trim(char *data, char *delimiters)
 
 /**************************************************************/
 
-int cfgfile::add_item(char *key, char *value)
+int cfgfile::add_item(const char *key, const char *value)
 {
 	void *ptr;
 
@@ -296,7 +296,7 @@ int cfgfile::parse(void)
 
 /**************************************************************/
 
-char *cfgfile::get(char *key)
+char *cfgfile::get(const char *key)
 {
 	size_t i;
 

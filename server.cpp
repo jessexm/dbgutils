@@ -823,7 +823,7 @@ static int client_write(SOCK *s, ocd *dbg)
 static int service_client(ocd *dbg, int client, char *userpasswd)
 {
 	int err;
-	char *ptr, *user;
+	char *ptr;
 	SOCK sock;
 	int auth;
 
@@ -832,8 +832,6 @@ static int service_client(ocd *dbg, int client, char *userpasswd)
 		close(client);
 		return -1;
 	}
-
-	user = NULL;
 
 	/* If no userpasswd requested, assume client authenticated */
 	if(!userpasswd || *userpasswd == '\0') {

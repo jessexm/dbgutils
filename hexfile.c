@@ -203,11 +203,9 @@ int rd_srec(uint8_t *buff, size_t buffsize, FILE *file, const char *filename)
 {
 	int line, records;
 	char *readbuff;
-	uint8_t fill;
 
 	line = 0;
 	records = 0;
-	fill = buff[0];
 
 	readbuff = (char *)xmalloc(BUFSIZ);
 

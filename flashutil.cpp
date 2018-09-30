@@ -46,9 +46,9 @@
 /**************************************************************/
 
 static const char *banner = "Z8 Encore! Flash Utility";
-static const char *progname;
+static char *progname;
 
-static char *serialport = DEFAULT_SERIALPORT;
+static const char *serialport = DEFAULT_SERIALPORT;
 static int baudrate = DEFAULT_BAUDRATE;
 static int mtu = DEFAULT_MTU;
 static int xtal = DEFAULT_XTAL;
@@ -70,9 +70,11 @@ static uint16_t serial_address;
 static uint32_t serial_number;
 static int serial_size;
 
+static int unlock_ocd = 0;
+
 /**************************************************************/
 
-char *serialport_selection[] = 
+const char *serialport_selection[] =
 #if (!defined _WIN32) && (defined __sun__)
 { "/dev/ttya", "/dev/ttyb", NULL };
 #elif (!defined _WIN32)
@@ -110,6 +112,7 @@ printf("  -c FREQUENCY     clock frequency in hertz (default: %d)\n",
     DEFAULT_XTAL);
 printf("  -s FILENAME      save memory to file\n");
 printf("  -z               fill memory with 00 instead of FF\n");
+printf("  -u               issue OCD unlock sequence for 8-pin device\n");
 printf("\n");
 
 return;
@@ -133,7 +136,7 @@ int setup(int argc, char **argv)
 		progname = s+1;
 	}
 	
-	while((c = getopt(argc, argv, "hiemn:p:b:c:s:t:zr:v")) != EOF) {
+	while((c = getopt(argc, argv, "hiemn:p:b:c:s:t:zr:vu")) != EOF) {
 		switch(c) {
 		case '?':
 			printf("Try '%s -h' for more information.\n", argv[0]);
@@ -244,6 +247,9 @@ int setup(int argc, char **argv)
 		case 'v':
 			verbose++;
 			break;
+		case 'u':
+			unlock_ocd = 1;
+			break;
 		default:
 			abort();
 		}
@@ -290,7 +296,7 @@ int setup(int argc, char **argv)
 int connect(void)
 {
 	int i;
-	char *port;
+	const char *port;
 
 	if(strcasecmp(serialport, "auto") == 0) {
 
@@ -300,7 +306,7 @@ int connect(void)
 		for(i=0; serialport_selection[i]; i++) {
 			port = serialport_selection[i];
 			try {
-				dbg->connect_serial(port, baudrate);
+				dbg->connect_serial(port, baudrate, unlock_ocd);
 			} catch(char *err) {
 				continue;
 			}
@@ -323,7 +329,7 @@ int connect(void)
 
 	} else {
 		try {
-			dbg->connect_serial(serialport, baudrate);
+			dbg->connect_serial(serialport, baudrate, unlock_ocd);
 		} catch(char *err) {
 			printf("Could not connect to device\n");
 			fprintf(stderr, "%s", err);

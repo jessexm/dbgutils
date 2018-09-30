@@ -108,7 +108,7 @@ void display_info(void)
 	printf("BAUDRATE:                    %d\n", baudrate);
 	if((reload = ez8->rd_reload())) {
 		int sf;
-		char *suffix;
+		const char *suffix;
 		float freq;
 
 		printf("BAUDRATE RELOAD:             %04X\n", reload);
@@ -312,7 +312,7 @@ void unassemble(void)
 
 void dump_memory(void)
 {	
-	char *prompt;
+	const char *prompt;
 	char mem;
 	char *buff;
 	char *tail;
@@ -487,7 +487,7 @@ void dump_memory(void)
 
 void alter_memory(void)
 {
-	char *msg;
+	const char *msg;
 	char mem;
 	char *buff;
 	char *tail;
@@ -710,7 +710,7 @@ void alter_memory(void)
 void fill_memory(void)
 {	
 	int c;
-	char *prompt;
+	const char *prompt;
 	char mem;
 	char *buff;
 	char *tail;
@@ -1000,7 +1000,7 @@ void modify_registers(void)
 	    r12_reg, r13_reg, r14_reg, r15_reg } reg;
 
 	const struct register_t {
-		char *name;
+		const char *name;
 		enum reg_t reg;
 	} registers[] = {
 		{ "pc", pc_reg },
@@ -1569,7 +1569,7 @@ void sub_shell(void)
 		return;
 	}
 
-	system(shell);
+	if (system(shell)) {}
 
 	return;
 }

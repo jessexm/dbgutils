@@ -56,7 +56,7 @@ ez8ocd::~ez8ocd()
  * This will connect the debugger to the specified serial port.
  */
 
-void ez8ocd::connect_serial(const char *device, int baudrate)
+void ez8ocd::connect_serial(const char *device, int baudrate, int unlock_ocd)
 {
 	ocd_serial *ocdptr;
 
@@ -69,7 +69,7 @@ void ez8ocd::connect_serial(const char *device, int baudrate)
 	ocdptr = new ocd_serial();
 
 	try {
-		ocdptr->connect(device, baudrate);
+		ocdptr->connect(device, baudrate, unlock_ocd);
 	} catch(char *err) {
 		delete ocdptr;
 		throw err;

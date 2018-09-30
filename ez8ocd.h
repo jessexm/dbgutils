@@ -100,7 +100,7 @@ public:
 
 	void (*callback)(void);
 
-	void connect_serial(const char *, int);
+	void connect_serial(const char *, int, int = 0);
 	void connect_parport(const char *);
 	void connect_tcpip(const char *);
 	void disconnect(void);

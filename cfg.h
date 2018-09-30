@@ -27,12 +27,12 @@ private:
 	struct items_t *items;
 	size_t num_items;
 
-	char *trim(char *, char *);
+	char *trim(char *, const char *);
 	char *getline(void);
 	int parse(void);
 
 
-	int add_item(char *, char *);
+	int add_item(const char *, const char *);
 
 public:
 	cfgfile(void);
@@ -40,7 +40,7 @@ public:
 
 	int open(const char *);
 	int close(void);
-	char *get(char *);
+	char *get(const char *);
 };
 
 
