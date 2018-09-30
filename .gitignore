@@ -1,0 +1,6 @@
+depend
+*.o
+*.a
+crcgen
+ez8mon
+flashutil
